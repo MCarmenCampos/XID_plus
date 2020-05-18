@@ -70,7 +70,7 @@ class prior(object):
         self.imphdu = imphdu
         self.imhdu = imhdu
 
-        x_pix, y_pix = np.meshgrid(np.arange(0, wcs_temp._naxis1), np.arange(0, wcs_temp._naxis2))
+        x_pix, y_pix = np.meshgrid(np.arange(0, wcs_temp._naxis[0]), np.arange(0, wcs_temp._naxis[1]))
         self.sx_pix = x_pix.flatten()
         self.sy_pix = y_pix.flatten()
         self.snim = nim.flatten()
@@ -295,3 +295,18 @@ class prior(object):
         self.amat_data = amat_data
         self.amat_row = amat_row
         self.amat_col = amat_col
+
+        
+class prior_submm(object):
+    def __init__(self, flux, sigma_flux):
+
+        # ---for any bad pixels set map pixel to zero and uncertianty to 1----
+        """Initiate prior class
+
+        :param flux: data on source fluxes
+        :param sigma_flux: data on source sigma_flux 
+        """
+        
+        self.flux = flux
+        self.sigma_flux = sigma_flux
+

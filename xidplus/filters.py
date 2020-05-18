@@ -93,15 +93,22 @@ class FilterFile:
 
         return np.array(matched)
 
-def fnu_filt(sed_fnu,filt_nu,filt_trans,nu_0,sed_f0):
-    #f_nu=Int(d_nu f_nu R_nu)/Int(d_nu (nu/nu_0)^-1 R_nu)
+# def fnu_filt(sed_fnu,filt_nu,filt_trans,nu_0,sed_f0):
+#     #f_nu=Int(d_nu f_nu R_nu)/Int(d_nu (nu/nu_0)^-1 R_nu)
+#     numerator=np.trapz(sed_fnu*filt_trans,x=filt_nu)
+#     denominator=np.trapz(filt_trans*(nu_0/filt_nu),x=filt_nu)
+
+#     #colour correction
+#     #C=Int(d_nu (nu/nu_0)^-1 R_nu)/Int(d_nu (f(nu)/f(nu_0)) R_nu)
+#     C_num=np.trapz(filt_trans*(nu_0/filt_nu),x=filt_nu)
+#     C_denom=np.trapz(filt_trans*(sed_fnu/sed_f0),x=filt_nu)
+
+
+#     return (numerator/denominator)*(C_num/C_denom)
+
+def fnu_filt(sed_fnu,filt_nu,filt_trans,nu_0,sed_f0,alpha):
+    #f_nu=Int(f_nu R_nu d_nu)/Int(R_nu (nu/nu_0)^alpha d_nu)
     numerator=np.trapz(sed_fnu*filt_trans,x=filt_nu)
-    denominator=np.trapz(filt_trans*(nu_0/filt_nu),x=filt_nu)
+    denominator=np.trapz(filt_trans*(filt_nu/nu_0)**alpha,x=filt_nu)
 
-    #colour correction
-    #C=Int(d_nu (nu/nu_0)^-1 R_nu)/Int(d_nu (f(nu)/f(nu_0)) R_nu)
-    C_num=np.trapz(filt_trans*(nu_0/filt_nu),x=filt_nu)
-    C_denom=np.trapz(filt_trans*(sed_fnu/sed_f0),x=filt_nu)
-
-
-    return (numerator/denominator)*(C_num/C_denom)
+    return numerator/denominator

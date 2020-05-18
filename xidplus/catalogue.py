@@ -377,3 +377,794 @@ def create_SPIRE_cat(posterior,prior250,prior350,prior500):
     thdulist = fits.HDUList([prihdu, tbhdu])
     return thdulist
 
+
+def create_LABOCA_cat(posterior, prior870):
+
+    """
+    Create LABOCA catalogue from posterior
+    
+    :param posterior: LABOCA xidplus.posterior class
+    :param prior870: LABOCA xidplus.prior class
+    :param Bayes_P870:  Bayes Pvalue residual statistic for LABOCA 870
+    :return: fits hdulist
+    """
+    import datetime
+    nsrc=prior870.nsrc
+    rep_maps = postmaps.replicated_maps([prior870], posterior)
+    Bayes_P870 = postmaps.Bayes_Pval_res(prior870, rep_maps[0])
+    # ----table info-----------------------
+    # first define columns
+    c1 = fits.Column(name='help_id', format='27A', array=prior870.ID)
+    c2 = fits.Column(name='RA', format='D', unit='degrees', array=prior870.sra)
+    c3 = fits.Column(name='Dec', format='D', unit='degrees', array=prior870.sdec)
+    c4 = fits.Column(name='F_LABOCA_850', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],50.0,axis=0))
+    c5 = fits.Column(name='FErr_LABOCA_850_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],84.1,axis=0))
+    c6 = fits.Column(name='FErr_LABOCA_850_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],15.9,axis=0))
+    c7 = fits.Column(name='Bkg_LABOCA_850', format='E', unit='Jy/beam',
+                     array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,0],50.0,axis=0)))
+    c8 = fits.Column(name='Sig_conf_LABOCA_850', format='E', unit='Jy/beam',
+                     array=np.full(nsrc, np.percentile(posterior.samples['sigma_conf'][:,0],50.0,axis=0)))
+    c9 = fits.Column(name='Rhat_LABOCA_850', format='E', array=posterior.Rhat['src_f'][:,0])
+    c10 = fits.Column(name='n_eff_LABOCA_850', format='E', array=posterior.n_eff['src_f'][:,0])
+    c11 = fits.Column(name='Pval_res_870', format='E', array=Bayes_P870)
+    
+    tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11])
+
+    tbhdu.header.set('TUCD1', 'ID', after='TFORM1')
+    tbhdu.header.set('TDESC1', 'ID of source', after='TUCD1')
+
+    tbhdu.header.set('TUCD2', 'pos.eq.RA', after='TUNIT2')
+    tbhdu.header.set('TDESC2', 'R.A. of object J2000', after='TUCD2')
+
+    tbhdu.header.set('TUCD3', 'pos.eq.DEC', after='TUNIT3')
+    tbhdu.header.set('TDESC3', 'Dec. of object J2000', after='TUCD3')
+
+    tbhdu.header.set('TUCD4', 'phot.flux.density', after='TUNIT4')
+    tbhdu.header.set('TDESC4', '870 Flux (at 50th percentile)', after='TUCD4')
+
+    tbhdu.header.set('TUCD5','phot.flux.density',after='TUNIT5')
+    tbhdu.header.set('TDESC5','870 Flux (at 84.1 percentile) ',after='TUCD5')
+
+    tbhdu.header.set('TUCD6','phot.flux.density',after='TUNIT6')
+    tbhdu.header.set('TDESC6','870 Flux (at 15.9 percentile)',after='TUCD6')
+
+    tbhdu.header.set('TUCD7','phot.flux.density',after='TUNIT7')
+    tbhdu.header.set('TDESC7','870 background',after='TUCD7')
+
+    tbhdu.header.set('TUCD8','phot.flux.density',after='TUNIT8')
+    tbhdu.header.set('TDESC8','870 residual confusion noise',after='TUCD8')
+
+    tbhdu.header.set('TUCD9','stat.value',after='TFORM9')
+    tbhdu.header.set('TDESC9','870 MCMC Convergence statistic',after='TUCD9')
+
+    tbhdu.header.set('TUCD10','stat.value',after='TFORM10')
+    tbhdu.header.set('TDESC10','870 MCMC independence statistic',after='TUCD10')
+
+    tbhdu.header.set('TUCD11','stat.value',after='TFORM11')
+    tbhdu.header.set('TDESC11','870 Bayes Pval residual statistic',after='TUCD11')
+
+    #----Primary header-----------------------------------
+    prihdr = fits.Header()
+    prihdr['Prior_Cat'] = prior870.prior_cat
+    prihdr['TITLE']   = 'XID+LABOCA catalogue'
+    #prihdr['OBJECT']  = prior250.imphdu['OBJECT'] #I need to think if this needs to change
+    prihdr['CREATOR'] = 'WP5'
+    prihdr['XIDplus'] = io.git_version()
+    prihdr['DATE']    = datetime.datetime.now().isoformat()
+    prihdu = fits.PrimaryHDU(header=prihdr)
+    thdulist = fits.HDUList([prihdu, tbhdu])
+    return thdulist
+# noinspection PyPackageRequirements
+
+
+
+
+def create_IR_cat(posterior,priors):
+
+    """
+    Create SED catalogue from posterior
+
+
+    :param posterior: SED xidplus.posterior class
+    :param priors: MIPS-PACS-SPIRE-LABOCA xidplus.prior class
+    :return: fits hdulist
+    """
+    import datetime
+    nsrc=posterior.nsrc
+    prior24  = priors[0]
+    prior100 = priors[1]
+    prior160 = priors[2]
+    prior250 = priors[3]
+    prior350 = priors[4]
+    prior500 = priors[5]
+
+    #----table info-----------------------
+    #first define columns
+    c1 = fits.Column(name='ID', format='27A', array=prior250.ID)
+    c2 = fits.Column(name='RA', format='D', unit='degrees', array=prior250.sra)
+    c3 = fits.Column(name='Dec', format='D', unit='degrees', array=prior250.sdec)
+    c4 = fits.Column(name='F_MIPS_24', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],50.0,axis=0))
+    c5 = fits.Column(name='FErr_MIPS_24_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],84.1,axis=0))
+    c6 = fits.Column(name='FErr_MIPS_24_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],15.9,axis=0))
+    c7 = fits.Column(name='F_PACS_100', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],50.0,axis=0))
+    c8 = fits.Column(name='FErr_PACS_100_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],84.1,axis=0))
+    c9 = fits.Column(name='FErr_PACS_100_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],15.9,axis=0))
+    c10 = fits.Column(name='F_PACS_160', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],50.0,axis=0))
+    c11 = fits.Column(name='FErr_PACS_160_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],84.1,axis=0))
+    c12 = fits.Column(name='FErr_PACS_160_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],15.9,axis=0))
+    c13 = fits.Column(name='F_SPIRE_250', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],50.0,axis=0))
+    c14 = fits.Column(name='FErr_SPIRE_250_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],84.1,axis=0))
+    c15 = fits.Column(name='FErr_SPIRE_250_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],15.9,axis=0))
+    c16 = fits.Column(name='F_SPIRE_350', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],50.0,axis=0))
+    c17 = fits.Column(name='FErr_SPIRE_350_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],84.1,axis=0))
+    c18 = fits.Column(name='FErr_SPIRE_350_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],15.9,axis=0))
+    c19 = fits.Column(name='F_SPIRE_500', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],50.0,axis=0))
+    c20 = fits.Column(name='FErr_SPIRE_500_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],84.1,axis=0))
+    c21 = fits.Column(name='FErr_SPIRE_500_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],15.9,axis=0))
+    c22 = fits.Column(name='z', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],50.0,axis=0))
+    c23 = fits.Column(name='zErr_u', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],84.1,axis=0))
+    c24 = fits.Column(name='zErr_l', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],15.9,axis=0))
+    c25 = fits.Column(name='Nbb', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],50.0,axis=0))
+    c26 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],84.1,axis=0))
+    c27 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],15.9,axis=0))
+    
+
+    tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11,
+                            c12, c13, c14, c15, c16, c17, c18, c19, c20, c21,
+                            c22, c23, c24, c25, c26, c27])
+
+    tbhdu.header.set('TUCD1','ID',after='TFORM1')
+    tbhdu.header.set('TDESC1','ID of source',after='TUCD1')
+
+    tbhdu.header.set('TUCD2','pos.eq.RA',after='TUNIT2')      
+    tbhdu.header.set('TDESC2','R.A. of object J2000',after='TUCD2') 
+
+    tbhdu.header.set('TUCD3','pos.eq.DEC',after='TUNIT3')      
+    tbhdu.header.set('TDESC3','Dec. of object J2000',after='TUCD3') 
+
+    tbhdu.header.set('TUCD4','phot.flux.density',after='TUNIT4')      
+    tbhdu.header.set('TDESC4','24 Flux (at 50th percentile)',after='TUCD4') 
+
+    tbhdu.header.set('TUCD5','phot.flux.density',after='TUNIT5')      
+    tbhdu.header.set('TDESC5','24 Flux (at 84.1 percentile) ',after='TUCD5') 
+
+    tbhdu.header.set('TUCD6','phot.flux.density',after='TUNIT6')      
+    tbhdu.header.set('TDESC6','24 Flux (at 15.9 percentile)',after='TUCD6') 
+
+    tbhdu.header.set('TUCD7','phot.flux.density',after='TUNIT7')      
+    tbhdu.header.set('TDESC7','100 Flux (at 50th percentile)',after='TUCD7') 
+
+    tbhdu.header.set('TUCD8','phot.flux.density',after='TUNIT8')      
+    tbhdu.header.set('TDESC8','100 Flux (at 84.1 percentile) ',after='TUCD8') 
+
+    tbhdu.header.set('TUCD9','phot.flux.density',after='TUNIT9')      
+    tbhdu.header.set('TDESC9','100 Flux (at 15.9 percentile)',after='TUCD9') 
+
+    tbhdu.header.set('TUCD10','phot.flux.density',after='TUNIT10')      
+    tbhdu.header.set('TDESC10','160 Flux (at 50th percentile)',after='TUCD10') 
+
+    tbhdu.header.set('TUCD11','phot.flux.density',after='TUNIT11')      
+    tbhdu.header.set('TDESC11','160 Flux (at 84.1 percentile) ',after='TUCD11') 
+
+    tbhdu.header.set('TUCD12','phot.flux.density',after='TUNIT12')      
+    tbhdu.header.set('TDESC12','160 Flux (at 15.9 percentile)',after='TUCD12')
+
+    tbhdu.header.set('TUCD13','phot.flux.density',after='TUNIT13')      
+    tbhdu.header.set('TDESC13','250 Flux (at 50th percentile)',after='TUCD13') 
+
+    tbhdu.header.set('TUCD14','phot.flux.density',after='TUNIT14')      
+    tbhdu.header.set('TDESC14','250 Flux (at 84.1 percentile) ',after='TUCD14') 
+
+    tbhdu.header.set('TUCD15','phot.flux.density',after='TUNIT15')      
+    tbhdu.header.set('TDESC15','250 Flux (at 15.9 percentile)',after='TUCD15') 
+
+    tbhdu.header.set('TUCD16','phot.flux.density',after='TUNIT16')      
+    tbhdu.header.set('TDESC16','350 Flux (at 50th percentile)',after='TUCD16') 
+
+    tbhdu.header.set('TUCD17','phot.flux.density',after='TUNIT17')      
+    tbhdu.header.set('TDESC17','350 Flux (at 84.1 percentile) ',after='TUCD17') 
+
+    tbhdu.header.set('TUCD18','phot.flux.density',after='TUNIT18')      
+    tbhdu.header.set('TDESC18','350 Flux (at 15.9 percentile)',after='TUCD18') 
+
+    tbhdu.header.set('TUCD19','phot.flux.density',after='TUNIT19')      
+    tbhdu.header.set('TDESC19','500 Flux (at 50th percentile)',after='TUCD19') 
+
+    tbhdu.header.set('TUCD20','phot.flux.density',after='TUNIT20')      
+    tbhdu.header.set('TDESC20','500 Flux (at 84.1 percentile) ',after='TUCD20') 
+
+    tbhdu.header.set('TUCD21','phot.flux.density',after='TUNIT21')      
+    tbhdu.header.set('TDESC21','500 Flux (at 15.9 percentile)',after='TUCD21')
+    
+    tbhdu.header.set('TUCD22','phot.redshift',after='TFORM22')      
+    tbhdu.header.set('TDESC22','phot.redshift (at 50th percentile)',after='TUCD22') 
+
+    tbhdu.header.set('TUCD23','phot.redshift',after='TFORM23')      
+    tbhdu.header.set('TDESC23','phot.redshift (at 84.1 percentile) ',after='TUCD23') 
+    
+    tbhdu.header.set('TUCD24','phot.redshift',after='TFORM24')      
+    tbhdu.header.set('TDESC24','phot.redshift (at 15.9 percentile)',after='TUCD24')
+
+    tbhdu.header.set('TUCD25','log.Lsol',after='TUNIT25')      
+    tbhdu.header.set('TDESC25','log(Luminosity) (at 50th percentile)',after='TUCD25') 
+
+    tbhdu.header.set('TUCD26','log.Lsol',after='TUNIT26')      
+    tbhdu.header.set('TDESC26','log(Luminosity) (at 84.1 percentile) ',after='TUCD26') 
+
+    tbhdu.header.set('TUCD27','log.Lsol',after='TUNIT27')      
+    tbhdu.header.set('TDESC27','log(Luminosity) (at 15.9 percentile)',after='TUCD27')
+
+    
+    
+
+    #----Primary header-----------------------------------
+    prihdr = fits.Header()
+    prihdr['Prior_Cat'] = prior250.prior_cat
+    prihdr['TITLE']   = 'XID+SED catalogue'
+    #prihdr['OBJECT']  = prior250.imphdu['OBJECT'] #I need to think if this needs to change                              
+    prihdr['CREATOR'] = 'WP5'                                 
+    prihdr['XIDplus'] = io.git_version()
+    prihdr['DATE']    = datetime.datetime.now().isoformat()              
+    prihdu = fits.PrimaryHDU(header=prihdr)
+    
+    thdulist = fits.HDUList([prihdu, tbhdu])
+    return thdulist
+
+
+def create_IR_cat_fixz(posterior,priors):
+
+    """
+    Create SED catalogue from posterior
+
+
+    :param posterior: SED xidplus.posterior class
+    :param priors: MIPS-PACS-SPIRE-LABOCA xidplus.prior class
+    :return: fits hdulist
+    """
+    import datetime
+    nsrc=posterior.nsrc
+    prior24  = priors[0]
+    prior100 = priors[1]
+    prior160 = priors[2]
+    prior250 = priors[3]
+    prior350 = priors[4]
+    prior500 = priors[5]
+
+    #----table info-----------------------
+    #first define columns
+    c1 = fits.Column(name='ID', format='27A', array=prior250.ID)
+    c2 = fits.Column(name='RA', format='D', unit='degrees', array=prior250.sra)
+    c3 = fits.Column(name='Dec', format='D', unit='degrees', array=prior250.sdec)
+    c4 = fits.Column(name='F_MIPS_24', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],50.0,axis=0))
+    c5 = fits.Column(name='FErr_MIPS_24_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],84.1,axis=0))
+    c6 = fits.Column(name='FErr_MIPS_24_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],15.9,axis=0))
+    c7 = fits.Column(name='F_PACS_100', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],50.0,axis=0))
+    c8 = fits.Column(name='FErr_PACS_100_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],84.1,axis=0))
+    c9 = fits.Column(name='FErr_PACS_100_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],15.9,axis=0))
+    c10 = fits.Column(name='F_PACS_160', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],50.0,axis=0))
+    c11 = fits.Column(name='FErr_PACS_160_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],84.1,axis=0))
+    c12 = fits.Column(name='FErr_PACS_160_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],15.9,axis=0))
+    c13 = fits.Column(name='F_SPIRE_250', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],50.0,axis=0))
+    c14 = fits.Column(name='FErr_SPIRE_250_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],84.1,axis=0))
+    c15 = fits.Column(name='FErr_SPIRE_250_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],15.9,axis=0))
+    c16 = fits.Column(name='F_SPIRE_350', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],50.0,axis=0))
+    c17 = fits.Column(name='FErr_SPIRE_350_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],84.1,axis=0))
+    c18 = fits.Column(name='FErr_SPIRE_350_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],15.9,axis=0))
+    c19 = fits.Column(name='F_SPIRE_500', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],50.0,axis=0))
+    c20 = fits.Column(name='FErr_SPIRE_500_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],84.1,axis=0))
+    c21 = fits.Column(name='FErr_SPIRE_500_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],15.9,axis=0))
+    c22 = fits.Column(name='Nbb', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],50.0,axis=0))
+    c23 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],84.1,axis=0))
+    c24 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],15.9,axis=0))
+    
+
+    tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11,
+                            c12, c13, c14, c15, c16, c17, c18, c19, c20, c21,
+                            c22, c23, c24])
+
+    tbhdu.header.set('TUCD1','ID',after='TFORM1')
+    tbhdu.header.set('TDESC1','ID of source',after='TUCD1')
+
+    tbhdu.header.set('TUCD2','pos.eq.RA',after='TUNIT2')      
+    tbhdu.header.set('TDESC2','R.A. of object J2000',after='TUCD2') 
+
+    tbhdu.header.set('TUCD3','pos.eq.DEC',after='TUNIT3')      
+    tbhdu.header.set('TDESC3','Dec. of object J2000',after='TUCD3') 
+
+    tbhdu.header.set('TUCD4','phot.flux.density',after='TUNIT4')      
+    tbhdu.header.set('TDESC4','24 Flux (at 50th percentile)',after='TUCD4') 
+
+    tbhdu.header.set('TUCD5','phot.flux.density',after='TUNIT5')      
+    tbhdu.header.set('TDESC5','24 Flux (at 84.1 percentile) ',after='TUCD5') 
+
+    tbhdu.header.set('TUCD6','phot.flux.density',after='TUNIT6')      
+    tbhdu.header.set('TDESC6','24 Flux (at 15.9 percentile)',after='TUCD6') 
+
+    tbhdu.header.set('TUCD7','phot.flux.density',after='TUNIT7')      
+    tbhdu.header.set('TDESC7','100 Flux (at 50th percentile)',after='TUCD7') 
+
+    tbhdu.header.set('TUCD8','phot.flux.density',after='TUNIT8')      
+    tbhdu.header.set('TDESC8','100 Flux (at 84.1 percentile) ',after='TUCD8') 
+
+    tbhdu.header.set('TUCD9','phot.flux.density',after='TUNIT9')      
+    tbhdu.header.set('TDESC9','100 Flux (at 15.9 percentile)',after='TUCD9') 
+
+    tbhdu.header.set('TUCD10','phot.flux.density',after='TUNIT10')      
+    tbhdu.header.set('TDESC10','160 Flux (at 50th percentile)',after='TUCD10') 
+
+    tbhdu.header.set('TUCD11','phot.flux.density',after='TUNIT11')      
+    tbhdu.header.set('TDESC11','160 Flux (at 84.1 percentile) ',after='TUCD11') 
+
+    tbhdu.header.set('TUCD12','phot.flux.density',after='TUNIT12')      
+    tbhdu.header.set('TDESC12','160 Flux (at 15.9 percentile)',after='TUCD12')
+
+    tbhdu.header.set('TUCD13','phot.flux.density',after='TUNIT13')      
+    tbhdu.header.set('TDESC13','250 Flux (at 50th percentile)',after='TUCD13') 
+
+    tbhdu.header.set('TUCD14','phot.flux.density',after='TUNIT14')      
+    tbhdu.header.set('TDESC14','250 Flux (at 84.1 percentile) ',after='TUCD14') 
+
+    tbhdu.header.set('TUCD15','phot.flux.density',after='TUNIT15')      
+    tbhdu.header.set('TDESC15','250 Flux (at 15.9 percentile)',after='TUCD15') 
+
+    tbhdu.header.set('TUCD16','phot.flux.density',after='TUNIT16')      
+    tbhdu.header.set('TDESC16','350 Flux (at 50th percentile)',after='TUCD16') 
+
+    tbhdu.header.set('TUCD17','phot.flux.density',after='TUNIT17')      
+    tbhdu.header.set('TDESC17','350 Flux (at 84.1 percentile) ',after='TUCD17') 
+
+    tbhdu.header.set('TUCD18','phot.flux.density',after='TUNIT18')      
+    tbhdu.header.set('TDESC18','350 Flux (at 15.9 percentile)',after='TUCD18') 
+
+    tbhdu.header.set('TUCD19','phot.flux.density',after='TUNIT19')      
+    tbhdu.header.set('TDESC19','500 Flux (at 50th percentile)',after='TUCD19') 
+
+    tbhdu.header.set('TUCD20','phot.flux.density',after='TUNIT20')      
+    tbhdu.header.set('TDESC20','500 Flux (at 84.1 percentile) ',after='TUCD20') 
+
+    tbhdu.header.set('TUCD21','phot.flux.density',after='TUNIT21')      
+    tbhdu.header.set('TDESC21','500 Flux (at 15.9 percentile)',after='TUCD21')
+
+    tbhdu.header.set('TUCD22','log.Lsol',after='TUNIT22')      
+    tbhdu.header.set('TDESC22','log(Luminosity) (at 50th percentile)',after='TUCD22') 
+
+    tbhdu.header.set('TUCD23','log.Lsol',after='TUNIT23')      
+    tbhdu.header.set('TDESC23','log(Luminosity) (at 84.1 percentile) ',after='TUCD23') 
+
+    tbhdu.header.set('TUCD24','log.Lsol',after='TUNIT24')      
+    tbhdu.header.set('TDESC24','log(Luminosity) (at 15.9 percentile)',after='TUCD24')
+
+    
+    
+
+    #----Primary header-----------------------------------
+    prihdr = fits.Header()
+    prihdr['Prior_Cat'] = prior250.prior_cat
+    prihdr['TITLE']   = 'XID+SED catalogue'
+    #prihdr['OBJECT']  = prior250.imphdu['OBJECT'] #I need to think if this needs to change                              
+    prihdr['CREATOR'] = 'WP5'                                 
+    prihdr['XIDplus'] = io.git_version()
+    prihdr['DATE']    = datetime.datetime.now().isoformat()              
+    prihdu = fits.PrimaryHDU(header=prihdr)
+    
+    thdulist = fits.HDUList([prihdu, tbhdu])
+    return thdulist
+
+
+
+def create_SED_cat(posterior,priors):
+
+    """
+    Create SED catalogue from posterior
+
+
+    :param posterior: SED xidplus.posterior class
+    :param priors: MIPS-PACS-SPIRE-LABOCA xidplus.prior class
+    :return: fits hdulist
+    """
+    import datetime
+    nsrc=posterior.nsrc
+    prior24  = priors[0]
+    prior100 = priors[1]
+    prior160 = priors[2]
+    prior250 = priors[3]
+    prior350 = priors[4]
+    prior500 = priors[5]
+    prior850 = priors[6]
+
+    #----table info-----------------------
+    #first define columns
+    c1 = fits.Column(name='ID', format='27A', array=prior250.ID)
+    c2 = fits.Column(name='RA', format='D', unit='degrees', array=prior250.sra)
+    c3 = fits.Column(name='Dec', format='D', unit='degrees', array=prior250.sdec)
+    c4 = fits.Column(name='F_MIPS_24', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],50.0,axis=0))
+    c5 = fits.Column(name='FErr_MIPS_24_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],84.1,axis=0))
+    c6 = fits.Column(name='FErr_MIPS_24_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],15.9,axis=0))
+    c7 = fits.Column(name='F_PACS_100', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],50.0,axis=0))
+    c8 = fits.Column(name='FErr_PACS_100_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],84.1,axis=0))
+    c9 = fits.Column(name='FErr_PACS_100_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],15.9,axis=0))
+    c10 = fits.Column(name='F_PACS_160', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],50.0,axis=0))
+    c11 = fits.Column(name='FErr_PACS_160_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],84.1,axis=0))
+    c12 = fits.Column(name='FErr_PACS_160_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],15.9,axis=0))
+    c13 = fits.Column(name='F_SPIRE_250', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],50.0,axis=0))
+    c14 = fits.Column(name='FErr_SPIRE_250_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],84.1,axis=0))
+    c15 = fits.Column(name='FErr_SPIRE_250_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],15.9,axis=0))
+    c16 = fits.Column(name='F_SPIRE_350', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],50.0,axis=0))
+    c17 = fits.Column(name='FErr_SPIRE_350_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],84.1,axis=0))
+    c18 = fits.Column(name='FErr_SPIRE_350_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],15.9,axis=0))
+    c19 = fits.Column(name='F_SPIRE_500', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],50.0,axis=0))
+    c20 = fits.Column(name='FErr_SPIRE_500_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],84.1,axis=0))
+    c21 = fits.Column(name='FErr_SPIRE_500_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],15.9,axis=0))
+    c22 = fits.Column(name='F_LABOCA_850', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],50.0,axis=0))
+    c23 = fits.Column(name='FErr_LABOCA_850_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],84.1,axis=0))
+    c24 = fits.Column(name='FErr_LABOCA_850_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],15.9,axis=0))
+    c25 = fits.Column(name='z', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],50.0,axis=0))
+    c26 = fits.Column(name='zErr_u', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],84.1,axis=0))
+    c27 = fits.Column(name='zErr_l', format='E',
+                      array=np.percentile(posterior.samples['z'][:,:],15.9,axis=0))
+    c28 = fits.Column(name='Nbb', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],50.0,axis=0))
+    c29 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],84.1,axis=0))
+    c30 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],15.9,axis=0))
+    
+
+    tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11,
+                            c12, c13, c14, c15, c16, c17, c18, c19, c20, c21,
+                            c22, c23, c24, c25, c26, c27, c28, c29, c30])
+
+    tbhdu.header.set('TUCD1','ID',after='TFORM1')
+    tbhdu.header.set('TDESC1','ID of source',after='TUCD1')
+
+    tbhdu.header.set('TUCD2','pos.eq.RA',after='TUNIT2')      
+    tbhdu.header.set('TDESC2','R.A. of object J2000',after='TUCD2') 
+
+    tbhdu.header.set('TUCD3','pos.eq.DEC',after='TUNIT3')      
+    tbhdu.header.set('TDESC3','Dec. of object J2000',after='TUCD3') 
+
+    tbhdu.header.set('TUCD4','phot.flux.density',after='TUNIT4')      
+    tbhdu.header.set('TDESC4','24 Flux (at 50th percentile)',after='TUCD4') 
+
+    tbhdu.header.set('TUCD5','phot.flux.density',after='TUNIT5')      
+    tbhdu.header.set('TDESC5','24 Flux (at 84.1 percentile) ',after='TUCD5') 
+
+    tbhdu.header.set('TUCD6','phot.flux.density',after='TUNIT6')      
+    tbhdu.header.set('TDESC6','24 Flux (at 15.9 percentile)',after='TUCD6') 
+
+    tbhdu.header.set('TUCD7','phot.flux.density',after='TUNIT7')      
+    tbhdu.header.set('TDESC7','100 Flux (at 50th percentile)',after='TUCD7') 
+
+    tbhdu.header.set('TUCD8','phot.flux.density',after='TUNIT8')      
+    tbhdu.header.set('TDESC8','100 Flux (at 84.1 percentile) ',after='TUCD8') 
+
+    tbhdu.header.set('TUCD9','phot.flux.density',after='TUNIT9')      
+    tbhdu.header.set('TDESC9','100 Flux (at 15.9 percentile)',after='TUCD9') 
+
+    tbhdu.header.set('TUCD10','phot.flux.density',after='TUNIT10')      
+    tbhdu.header.set('TDESC10','160 Flux (at 50th percentile)',after='TUCD10') 
+
+    tbhdu.header.set('TUCD11','phot.flux.density',after='TUNIT11')      
+    tbhdu.header.set('TDESC11','160 Flux (at 84.1 percentile) ',after='TUCD11') 
+
+    tbhdu.header.set('TUCD12','phot.flux.density',after='TUNIT12')      
+    tbhdu.header.set('TDESC12','160 Flux (at 15.9 percentile)',after='TUCD12')
+
+    tbhdu.header.set('TUCD13','phot.flux.density',after='TUNIT13')      
+    tbhdu.header.set('TDESC13','250 Flux (at 50th percentile)',after='TUCD13') 
+
+    tbhdu.header.set('TUCD14','phot.flux.density',after='TUNIT14')      
+    tbhdu.header.set('TDESC14','250 Flux (at 84.1 percentile) ',after='TUCD14') 
+
+    tbhdu.header.set('TUCD15','phot.flux.density',after='TUNIT15')      
+    tbhdu.header.set('TDESC15','250 Flux (at 15.9 percentile)',after='TUCD15') 
+
+    tbhdu.header.set('TUCD16','phot.flux.density',after='TUNIT16')      
+    tbhdu.header.set('TDESC16','350 Flux (at 50th percentile)',after='TUCD16') 
+
+    tbhdu.header.set('TUCD17','phot.flux.density',after='TUNIT17')      
+    tbhdu.header.set('TDESC17','350 Flux (at 84.1 percentile) ',after='TUCD17') 
+
+    tbhdu.header.set('TUCD18','phot.flux.density',after='TUNIT18')      
+    tbhdu.header.set('TDESC18','350 Flux (at 15.9 percentile)',after='TUCD18') 
+
+    tbhdu.header.set('TUCD19','phot.flux.density',after='TUNIT19')      
+    tbhdu.header.set('TDESC19','500 Flux (at 50th percentile)',after='TUCD19') 
+
+    tbhdu.header.set('TUCD20','phot.flux.density',after='TUNIT20')      
+    tbhdu.header.set('TDESC20','500 Flux (at 84.1 percentile) ',after='TUCD20') 
+
+    tbhdu.header.set('TUCD21','phot.flux.density',after='TUNIT21')      
+    tbhdu.header.set('TDESC21','500 Flux (at 15.9 percentile)',after='TUCD21')
+
+    tbhdu.header.set('TUCD22','phot.flux.density',after='TUNIT22')      
+    tbhdu.header.set('TDESC22','850 Flux (at 50th percentile)',after='TUCD22') 
+
+    tbhdu.header.set('TUCD23','phot.flux.density',after='TUNIT23')      
+    tbhdu.header.set('TDESC23','850 Flux (at 84.1 percentile) ',after='TUCD23') 
+
+    tbhdu.header.set('TUCD24','phot.flux.density',after='TUNIT24')      
+    tbhdu.header.set('TDESC24','850 Flux (at 15.9 percentile)',after='TUCD24')
+
+    tbhdu.header.set('TUCD25','phot.redshift',after='TFORM25')      
+    tbhdu.header.set('TDESC25','phot.redshift (at 50th percentile)',after='TUCD25') 
+
+    tbhdu.header.set('TUCD26','phot.redshift',after='TFORM26')      
+    tbhdu.header.set('TDESC26','phot.redshift (at 84.1 percentile) ',after='TUCD26') 
+
+    tbhdu.header.set('TUCD27','phot.redshift',after='TFORM27')      
+    tbhdu.header.set('TDESC27','phot.redshift (at 15.9 percentile)',after='TUCD27')
+
+    tbhdu.header.set('TUCD28','log.Lsol',after='TUNIT28')      
+    tbhdu.header.set('TDESC28','log(Luminosity) (at 50th percentile)',after='TUCD28') 
+
+    tbhdu.header.set('TUCD29','log.Lsol',after='TUNIT29')      
+    tbhdu.header.set('TDESC29','log(Luminosity) (at 84.1 percentile) ',after='TUCD29') 
+
+    tbhdu.header.set('TUCD30','log.Lsol',after='TUNIT30')      
+    tbhdu.header.set('TDESC30','log(Luminosity) (at 15.9 percentile)',after='TUCD30')
+
+    
+    
+
+    #----Primary header-----------------------------------
+    prihdr = fits.Header()
+    prihdr['Prior_Cat'] = prior250.prior_cat
+    prihdr['TITLE']   = 'XID+SED catalogue'
+    #prihdr['OBJECT']  = prior250.imphdu['OBJECT'] #I need to think if this needs to change                              
+    prihdr['CREATOR'] = 'WP5'                                 
+    prihdr['XIDplus'] = io.git_version()
+    prihdr['DATE']    = datetime.datetime.now().isoformat()              
+    prihdu = fits.PrimaryHDU(header=prihdr)
+    
+    thdulist = fits.HDUList([prihdu, tbhdu])
+    return thdulist
+
+
+def create_SED_cat_fixz(posterior,priors):
+
+    """
+    Create SED catalogue from posterior
+
+
+    :param posterior: SED xidplus.posterior class
+    :param priors: MIPS-PACS-SPIRE-LABOCA xidplus.prior class
+    :return: fits hdulist
+    """
+    import datetime
+    nsrc=posterior.nsrc
+    prior24  = priors[0]
+    prior100 = priors[1]
+    prior160 = priors[2]
+    prior250 = priors[3]
+    prior350 = priors[4]
+    prior500 = priors[5]
+    prior850 = priors[6]
+
+    #----table info-----------------------
+    #first define columns
+    c1 = fits.Column(name='ID', format='27A', array=prior250.ID)
+    c2 = fits.Column(name='RA', format='D', unit='degrees', array=prior250.sra)
+    c3 = fits.Column(name='Dec', format='D', unit='degrees', array=prior250.sdec)
+    c4 = fits.Column(name='F_MIPS_24', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],50.0,axis=0))
+    c5 = fits.Column(name='FErr_MIPS_24_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],84.1,axis=0))
+    c6 = fits.Column(name='FErr_MIPS_24_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,0,:],15.9,axis=0))
+    c7 = fits.Column(name='F_PACS_100', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],50.0,axis=0))
+    c8 = fits.Column(name='FErr_PACS_100_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],84.1,axis=0))
+    c9 = fits.Column(name='FErr_PACS_100_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,1,:],15.9,axis=0))
+    c10 = fits.Column(name='F_PACS_160', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],50.0,axis=0))
+    c11 = fits.Column(name='FErr_PACS_160_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],84.1,axis=0))
+    c12 = fits.Column(name='FErr_PACS_160_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,2,:],15.9,axis=0))
+    c13 = fits.Column(name='F_SPIRE_250', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],50.0,axis=0))
+    c14 = fits.Column(name='FErr_SPIRE_250_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],84.1,axis=0))
+    c15 = fits.Column(name='FErr_SPIRE_250_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,3,:],15.9,axis=0))
+    c16 = fits.Column(name='F_SPIRE_350', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],50.0,axis=0))
+    c17 = fits.Column(name='FErr_SPIRE_350_u', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],84.1,axis=0))
+    c18 = fits.Column(name='FErr_SPIRE_350_l', format='E', unit='mJy',
+                     array=np.percentile(posterior.samples['src_f'][:,4,:],15.9,axis=0))
+    c19 = fits.Column(name='F_SPIRE_500', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],50.0,axis=0))
+    c20 = fits.Column(name='FErr_SPIRE_500_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],84.1,axis=0))
+    c21 = fits.Column(name='FErr_SPIRE_500_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,5,:],15.9,axis=0))
+    c22 = fits.Column(name='F_LABOCA_850', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],50.0,axis=0))
+    c23 = fits.Column(name='FErr_LABOCA_850_u', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],84.1,axis=0))
+    c24 = fits.Column(name='FErr_LABOCA_850_l', format='E', unit='mJy',
+                      array=np.percentile(posterior.samples['src_f'][:,6,:],15.9,axis=0))
+    c25 = fits.Column(name='Nbb', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],50.0,axis=0))
+    c26 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],84.1,axis=0))
+    c27 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
+                      array=np.percentile(posterior.samples['Nbb'][:,:],15.9,axis=0))
+    
+
+    tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11,
+                            c12, c13, c14, c15, c16, c17, c18, c19, c20, c21,
+                            c22, c23, c24, c25, c26, c27])
+
+    tbhdu.header.set('TUCD1','ID',after='TFORM1')
+    tbhdu.header.set('TDESC1','ID of source',after='TUCD1')
+
+    tbhdu.header.set('TUCD2','pos.eq.RA',after='TUNIT2')      
+    tbhdu.header.set('TDESC2','R.A. of object J2000',after='TUCD2') 
+
+    tbhdu.header.set('TUCD3','pos.eq.DEC',after='TUNIT3')      
+    tbhdu.header.set('TDESC3','Dec. of object J2000',after='TUCD3') 
+
+    tbhdu.header.set('TUCD4','phot.flux.density',after='TUNIT4')      
+    tbhdu.header.set('TDESC4','24 Flux (at 50th percentile)',after='TUCD4') 
+
+    tbhdu.header.set('TUCD5','phot.flux.density',after='TUNIT5')      
+    tbhdu.header.set('TDESC5','24 Flux (at 84.1 percentile) ',after='TUCD5') 
+
+    tbhdu.header.set('TUCD6','phot.flux.density',after='TUNIT6')      
+    tbhdu.header.set('TDESC6','24 Flux (at 15.9 percentile)',after='TUCD6') 
+
+    tbhdu.header.set('TUCD7','phot.flux.density',after='TUNIT7')      
+    tbhdu.header.set('TDESC7','100 Flux (at 50th percentile)',after='TUCD7') 
+
+    tbhdu.header.set('TUCD8','phot.flux.density',after='TUNIT8')      
+    tbhdu.header.set('TDESC8','100 Flux (at 84.1 percentile) ',after='TUCD8') 
+
+    tbhdu.header.set('TUCD9','phot.flux.density',after='TUNIT9')      
+    tbhdu.header.set('TDESC9','100 Flux (at 15.9 percentile)',after='TUCD9') 
+
+    tbhdu.header.set('TUCD10','phot.flux.density',after='TUNIT10')      
+    tbhdu.header.set('TDESC10','160 Flux (at 50th percentile)',after='TUCD10') 
+
+    tbhdu.header.set('TUCD11','phot.flux.density',after='TUNIT11')      
+    tbhdu.header.set('TDESC11','160 Flux (at 84.1 percentile) ',after='TUCD11') 
+
+    tbhdu.header.set('TUCD12','phot.flux.density',after='TUNIT12')      
+    tbhdu.header.set('TDESC12','160 Flux (at 15.9 percentile)',after='TUCD12')
+
+    tbhdu.header.set('TUCD13','phot.flux.density',after='TUNIT13')      
+    tbhdu.header.set('TDESC13','250 Flux (at 50th percentile)',after='TUCD13') 
+
+    tbhdu.header.set('TUCD14','phot.flux.density',after='TUNIT14')      
+    tbhdu.header.set('TDESC14','250 Flux (at 84.1 percentile) ',after='TUCD14') 
+
+    tbhdu.header.set('TUCD15','phot.flux.density',after='TUNIT15')      
+    tbhdu.header.set('TDESC15','250 Flux (at 15.9 percentile)',after='TUCD15') 
+
+    tbhdu.header.set('TUCD16','phot.flux.density',after='TUNIT16')      
+    tbhdu.header.set('TDESC16','350 Flux (at 50th percentile)',after='TUCD16') 
+
+    tbhdu.header.set('TUCD17','phot.flux.density',after='TUNIT17')      
+    tbhdu.header.set('TDESC17','350 Flux (at 84.1 percentile) ',after='TUCD17') 
+
+    tbhdu.header.set('TUCD18','phot.flux.density',after='TUNIT18')      
+    tbhdu.header.set('TDESC18','350 Flux (at 15.9 percentile)',after='TUCD18') 
+
+    tbhdu.header.set('TUCD19','phot.flux.density',after='TUNIT19')      
+    tbhdu.header.set('TDESC19','500 Flux (at 50th percentile)',after='TUCD19') 
+
+    tbhdu.header.set('TUCD20','phot.flux.density',after='TUNIT20')      
+    tbhdu.header.set('TDESC20','500 Flux (at 84.1 percentile) ',after='TUCD20') 
+
+    tbhdu.header.set('TUCD21','phot.flux.density',after='TUNIT21')      
+    tbhdu.header.set('TDESC21','500 Flux (at 15.9 percentile)',after='TUCD21')
+
+    tbhdu.header.set('TUCD22','phot.flux.density',after='TUNIT22')      
+    tbhdu.header.set('TDESC22','850 Flux (at 50th percentile)',after='TUCD22') 
+
+    tbhdu.header.set('TUCD23','phot.flux.density',after='TUNIT23')      
+    tbhdu.header.set('TDESC23','850 Flux (at 84.1 percentile) ',after='TUCD23') 
+
+    tbhdu.header.set('TUCD24','phot.flux.density',after='TUNIT24')      
+    tbhdu.header.set('TDESC24','850 Flux (at 15.9 percentile)',after='TUCD24')
+
+    tbhdu.header.set('TUCD25','log.Lsol',after='TUNIT25')      
+    tbhdu.header.set('TDESC25','log(Luminosity) (at 50th percentile)',after='TUCD25') 
+
+    tbhdu.header.set('TUCD26','log.Lsol',after='TUNIT26')      
+    tbhdu.header.set('TDESC26','log(Luminosity) (at 84.1 percentile) ',after='TUCD26') 
+
+    tbhdu.header.set('TUCD27','log.Lsol',after='TUNIT27')      
+    tbhdu.header.set('TDESC27','log(Luminosity) (at 15.9 percentile)',after='TUCD27')
+
+    
+    
+
+    #----Primary header-----------------------------------
+    prihdr = fits.Header()
+    prihdr['Prior_Cat'] = prior250.prior_cat
+    prihdr['TITLE']   = 'XID+SED catalogue'
+    #prihdr['OBJECT']  = prior250.imphdu['OBJECT'] #I need to think if this needs to change                              
+    prihdr['CREATOR'] = 'WP5'                                 
+    prihdr['XIDplus'] = io.git_version()
+    prihdr['DATE']    = datetime.datetime.now().isoformat()              
+    prihdu = fits.PrimaryHDU(header=prihdr)
+    
+    thdulist = fits.HDUList([prihdu, tbhdu])
+    return thdulist
+
