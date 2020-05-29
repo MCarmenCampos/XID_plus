@@ -810,6 +810,7 @@ def create_SED_cat(posterior,priors):
     :param priors: MIPS-PACS-SPIRE-LABOCA xidplus.prior class
     :return: fits hdulist
     """
+    
     import datetime
     nsrc=posterior.nsrc
     prior24  = priors[0]
@@ -819,6 +820,15 @@ def create_SED_cat(posterior,priors):
     prior350 = priors[4]
     prior500 = priors[5]
     prior850 = priors[6]
+    
+    rep_maps = postmaps.replicated_maps([prior24, prior100,prior160, prior250, prior350,prior500, prior850], posterior)
+    Bayes_P24 = postmaps.Bayes_Pval_res(prior250, rep_maps[0])
+    Bayes_P100 = postmaps.Bayes_Pval_res(prior350, rep_maps[1])
+    Bayes_P160 = postmaps.Bayes_Pval_res(prior500, rep_maps[2])
+    Bayes_P250 = postmaps.Bayes_Pval_res(prior250, rep_maps[3])
+    Bayes_P350 = postmaps.Bayes_Pval_res(prior350, rep_maps[4])
+    Bayes_P500 = postmaps.Bayes_Pval_res(prior500, rep_maps[5])
+    Bayes_P850 = postmaps.Bayes_Pval_res(prior500, rep_maps[6])
 
     #----table info-----------------------
     #first define columns
@@ -867,23 +877,86 @@ def create_SED_cat(posterior,priors):
                       array=np.percentile(posterior.samples['src_f'][:,6,:],84.1,axis=0))
     c24 = fits.Column(name='FErr_LABOCA_850_l', format='E', unit='mJy',
                       array=np.percentile(posterior.samples['src_f'][:,6,:],15.9,axis=0))
-    c25 = fits.Column(name='z', format='E',
+    
+    c25 = fits.Column(name='Bkg_MIPS_24', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,0],50.0,axis=0)))
+    c26 = fits.Column(name='Bkg_PACS_100', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,1],50.0,axis=0)))
+    c27 = fits.Column(name='Bkg_PACS_160', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,2],50.0,axis=0)))
+    
+    c28 = fits.Column(name='Bkg_SPIRE_250', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,3],50.0,axis=0)))
+    c29 = fits.Column(name='Bkg_SPIRE_350', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,4],50.0,axis=0)))
+    c30 = fits.Column(name='Bkg_SPIRE_500', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,5],50.0,axis=0)))
+    c31 = fits.Column(name='Bkg_LABOCA_850', format='E', unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['bkg'][:,6],50.0,axis=0)))
+    
+    
+    c32 = fits.Column(name='Sig_conf_MIPS_24', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,0],50.0,axis=0)))
+    c33 = fits.Column(name='Sig_conf_PACS_100', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,1],50.0,axis=0)))
+    c34 = fits.Column(name='Sig_conf_PACS_160', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,2],50.0,axis=0)))
+    c35 = fits.Column(name='Sig_conf_SPIRE_250', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,3],50.0,axis=0)))
+    c36 = fits.Column(name='Sig_conf_SPIRE_350', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,4],50.0,axis=0)))
+    c37 = fits.Column(name='Sig_conf_SPIRE_500', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,5],50.0,axis=0)))
+    c38 = fits.Column(name='Sig_conf_LABOCA_850', format='E',unit='mJy/Beam',
+                      array=np.full(nsrc,np.percentile(posterior.samples['sigma_conf'][:,6],50.0,axis=0)))
+    
+    
+    c39 = fits.Column(name='z', format='E',
                       array=np.percentile(posterior.samples['z'][:,:],50.0,axis=0))
-    c26 = fits.Column(name='zErr_u', format='E',
+    c40 = fits.Column(name='zErr_u', format='E',
                       array=np.percentile(posterior.samples['z'][:,:],84.1,axis=0))
-    c27 = fits.Column(name='zErr_l', format='E',
+    c41 = fits.Column(name='zErr_l', format='E',
                       array=np.percentile(posterior.samples['z'][:,:],15.9,axis=0))
-    c28 = fits.Column(name='Nbb', format='E', unit='logLsol',
+    c42 = fits.Column(name='Nbb', format='E', unit='logLsol',
                       array=np.percentile(posterior.samples['Nbb'][:,:],50.0,axis=0))
-    c29 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
+    c43 = fits.Column(name='Nbb_u', format='E', unit='logLsol',
                       array=np.percentile(posterior.samples['Nbb'][:,:],84.1,axis=0))
-    c30 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
+    c44 = fits.Column(name='Nbb_l', format='E', unit='logLsol',
                       array=np.percentile(posterior.samples['Nbb'][:,:],15.9,axis=0))
+    
+    
+    c45 = fits.Column(name='Rhat_MIPS_24', format='E', array=posterior.Rhat['src_f'][:,0])
+    c46 = fits.Column(name='n_eff_MIPS_24', format='E', array=posterior.n_eff['src_f'][:,0])
+    c47 = fits.Column(name='Pval_res_24', format='E', array=Bayes_P24)
+
+    c48 = fits.Column(name='Rhat_PACS_100', format='E', array=posterior.Rhat['src_f'][:,1])
+    c49 = fits.Column(name='Rhat_PACS_160', format='E', array=posterior.Rhat['src_f'][:,2])
+    c50 = fits.Column(name='n_eff_PACS_100', format='E', array=posterior.n_eff['src_f'][:,1])
+    c51 = fits.Column(name='n_eff_PACS_160', format='E', array=posterior.n_eff['src_f'][:,2])
+    c52 = fits.Column(name='Pval_res_100', format='E', array=Bayes_P100)
+    c53 = fits.Column(name='Pval_res_160', format='E', array=Bayes_P160)
+    
+    c54 = fits.Column(name='Rhat_SPIRE_250', format='E', array=posterior.Rhat['src_f'][:,3])
+    c55 = fits.Column(name='Rhat_SPIRE_350', format='E', array=posterior.Rhat['src_f'][:,4])
+    c56 = fits.Column(name='Rhat_SPIRE_500', format='E', array=posterior.Rhat['src_f'][:,5])
+    c57 = fits.Column(name='n_eff_SPIRE_250', format='E', array=posterior.n_eff['src_f'][:,3])
+    c58 = fits.Column(name='n_eff_SPIRE_350', format='E', array=posterior.n_eff['src_f'][:,4])
+    c59 = fits.Column(name='n_eff_SPIRE_500', format='E', array=posterior.n_eff['src_f'][:,5])
+    c60 = fits.Column(name='Pval_res_250', format='E', array=Bayes_P250)
+    c61 = fits.Column(name='Pval_res_350', format='E', array=Bayes_P350)
+    c62 = fits.Column(name='Pval_res_500', format='E', array=Bayes_P500)
+    
+    c63 = fits.Column(name='Rhat_LABOCA_850', format='E', array=posterior.Rhat['src_f'][:,6])
+    c64 = fits.Column(name='n_eff_LABOCA_850', format='E', array=posterior.n_eff['src_f'][:,6])
+    c65 = fits.Column(name='Pval_res_850', format='E', array=Bayes_P24)
+
     
 
     tbhdu = fits.BinTableHDU.from_columns([c1, c2, c3, c4, c5, c6, c7, c8, c9, c10, c11,
-                            c12, c13, c14, c15, c16, c17, c18, c19, c20, c21,
-                            c22, c23, c24, c25, c26, c27, c28, c29, c30])
+                            c12,c13,c14,c15,c16,c17,c18,c19,c20,c21,c22,c23,c24,c25,c26,c27,c28,c29,c30,
+                                           c31,c32,c33,c34,c35,c36,c37,c38,c39,c40,
+                                           c41,c42,c43,c44,c45,c46,c47,c48,c49,c50,
+                                           c51,c52,c53,c54,c55,c56,c57,c58,c59,c60,c61,c62,c63,c64,c65])
 
     tbhdu.header.set('TUCD1','ID',after='TFORM1')
     tbhdu.header.set('TDESC1','ID of source',after='TUCD1')
@@ -956,24 +1029,139 @@ def create_SED_cat(posterior,priors):
 
     tbhdu.header.set('TUCD24','phot.flux.density',after='TUNIT24')      
     tbhdu.header.set('TDESC24','850 Flux (at 15.9 percentile)',after='TUCD24')
+    
 
-    tbhdu.header.set('TUCD25','phot.redshift',after='TFORM25')      
-    tbhdu.header.set('TDESC25','phot.redshift (at 50th percentile)',after='TUCD25') 
+    tbhdu.header.set('TUCD25','phot.flux.density',after='TUNIT25')      
+    tbhdu.header.set('TDESC25','24 background',after='TUCD25') 
 
-    tbhdu.header.set('TUCD26','phot.redshift',after='TFORM26')      
-    tbhdu.header.set('TDESC26','phot.redshift (at 84.1 percentile) ',after='TUCD26') 
+    tbhdu.header.set('TUCD25','phot.flux.density',after='TUNIT26')      
+    tbhdu.header.set('TDESC26','100 background',after='TUCD25') 
 
-    tbhdu.header.set('TUCD27','phot.redshift',after='TFORM27')      
-    tbhdu.header.set('TDESC27','phot.redshift (at 15.9 percentile)',after='TUCD27')
+    tbhdu.header.set('TUCD27','phot.flux.density',after='TUNIT27')      
+    tbhdu.header.set('TDESC27','160 background',after='TUCD27')
+    
+    tbhdu.header.set('TUCD28','phot.flux.density',after='TUNIT28')      
+    tbhdu.header.set('TDESC28','250 background',after='TUCD28') 
 
-    tbhdu.header.set('TUCD28','log.Lsol',after='TUNIT28')      
-    tbhdu.header.set('TDESC28','log(Luminosity) (at 50th percentile)',after='TUCD28') 
+    tbhdu.header.set('TUCD29','phot.flux.density',after='TUNIT29')      
+    tbhdu.header.set('TDESC14','350 background',after='TUCD29') 
 
-    tbhdu.header.set('TUCD29','log.Lsol',after='TUNIT29')      
-    tbhdu.header.set('TDESC29','log(Luminosity) (at 84.1 percentile) ',after='TUCD29') 
+    tbhdu.header.set('TUCD30','phot.flux.density',after='TUNIT30')      
+    tbhdu.header.set('TDESC30','500 background',after='TUCD30')
 
-    tbhdu.header.set('TUCD30','log.Lsol',after='TUNIT30')      
-    tbhdu.header.set('TDESC30','log(Luminosity) (at 15.9 percentile)',after='TUCD30')
+    tbhdu.header.set('TUCD31','phot.flux.density',after='TUNIT31')      
+    tbhdu.header.set('TDESC31','850 background',after='TUCD31')
+    
+
+    tbhdu.header.set('TUCD32','phot.flux.density',after='TUNIT32')
+    tbhdu.header.set('TDESC32','24 residual confusion noise',after='TUCD32')
+
+    tbhdu.header.set('TUCD33','phot.flux.density',after='TUNIT33')
+    tbhdu.header.set('TDESC33','100 residual confusion noise',after='TUCD33')
+
+    tbhdu.header.set('TUCD34','phot.flux.density',after='TUNIT34')
+    tbhdu.header.set('TDESC34','160 residual confusion noise',after='TUCD34')
+    
+    tbhdu.header.set('TUCD35','phot.flux.density',after='TUNIT35')
+    tbhdu.header.set('TDESC35','250 residual confusion noise',after='TUCD35')
+
+    tbhdu.header.set('TUCD36','phot.flux.density',after='TUNIT36')
+    tbhdu.header.set('TDESC36','350 residual confusion noise',after='TUCD36')
+
+    tbhdu.header.set('TUCD37','phot.flux.density',after='TUNIT37')
+    tbhdu.header.set('TDESC37','500 residual confusion noise',after='TUCD37')
+
+    tbhdu.header.set('TUCD38','phot.flux.density',after='TUNIT38')
+    tbhdu.header.set('TDESC38','850 residual confusion noise',after='TUCD38')
+    
+
+    tbhdu.header.set('TUCD39','phot.redshift',after='TFORM39')      
+    tbhdu.header.set('TDESC39','phot.redshift (at 50th percentile)',after='TUCD39') 
+
+    tbhdu.header.set('TUCD40','phot.redshift',after='TFORM40')      
+    tbhdu.header.set('TDESC40','phot.redshift (at 84.1 percentile) ',after='TUCD40') 
+
+    tbhdu.header.set('TUCD41','phot.redshift',after='TFORM41')      
+    tbhdu.header.set('TDESC41','phot.redshift (at 15.9 percentile)',after='TUCD41')
+
+    tbhdu.header.set('TUCD42','log.Lsol',after='TUNIT42')      
+    tbhdu.header.set('TDESC42','log(Luminosity) (at 50th percentile)',after='TUCD42') 
+
+    tbhdu.header.set('TUCD43','log.Lsol',after='TUNIT43')      
+    tbhdu.header.set('TDESC43','log(Luminosity) (at 84.1 percentile) ',after='TUCD43') 
+
+    tbhdu.header.set('TUCD44','log.Lsol',after='TUNIT44')      
+    tbhdu.header.set('TDESC44','log(Luminosity) (at 15.9 percentile)',after='TUCD44')
+    
+    
+    tbhdu.header.set('TUCD45','stat.value',after='TFORM45')
+    tbhdu.header.set('TDESC45','24 MCMC Convergence statistic',after='TUCD45')
+    
+    tbhdu.header.set('TUCD46','stat.value',after='TFORM46')
+    tbhdu.header.set('TDESC46','24 MCMC independence statistic',after='TUCD46')
+    
+    tbhdu.header.set('TUCD47','stat.value',after='TFORM47')
+    tbhdu.header.set('TDESC47','24 Bayes Pval residual statistic',after='TUCD47')
+    
+
+    tbhdu.header.set('TUCD48','stat.value',after='TFORM48')
+    tbhdu.header.set('TDESC48','100 MCMC Convergence statistic',after='TUCD48')
+
+    tbhdu.header.set('TUCD49','stat.value',after='TFORM49')
+    tbhdu.header.set('TDESC49','160 MCMC Convergence statistic',after='TUCD49')
+    
+    tbhdu.header.set('TUCD50','stat.value',after='TFORM50')
+    tbhdu.header.set('TDESC50','100 MCMC independence statistic',after='TUCD50')
+
+    tbhdu.header.set('TUCD51','stat.value',after='TFORM51')
+    tbhdu.header.set('TDESC51','160 MCMC independence statistic',after='TUCD51')
+    
+    tbhdu.header.set('TUCD52','stat.value',after='TFORM52')
+    tbhdu.header.set('TDESC52','100 Bayes Pval residual statistic',after='TUCD52')
+
+    tbhdu.header.set('TUCD53','stat.value',after='TFORM53')
+    tbhdu.header.set('TDESC53','160 Bayes Pval residual statistic',after='TUCD53')
+    
+    
+     
+    tbhdu.header.set('TUCD54','stat.value',after='TFORM54')
+    tbhdu.header.set('TDESC54','250 MCMC Convergence statistic',after='TUCD54')
+
+    tbhdu.header.set('TUCD55','stat.value',after='TFORM55')
+    tbhdu.header.set('TDESC55','350 MCMC Convergence statistic',after='TUCD55')
+
+    tbhdu.header.set('TUCD56','stat.value',after='TFORM56')
+    tbhdu.header.set('TDESC56','500 MCMC Convergence statistic',after='TUCD56')
+
+    tbhdu.header.set('TUCD57','stat.value',after='TFORM57')
+    tbhdu.header.set('TDESC57','250 MCMC independence statistic',after='TUCD57')
+
+    tbhdu.header.set('TUCD58','stat.value',after='TFORM58')
+    tbhdu.header.set('TDESC58','350 MCMC independence statistic',after='TUCD58')
+
+    tbhdu.header.set('TUCD59','stat.value',after='TFORM59')
+    tbhdu.header.set('TDESC59','500 MCMC independence statistic',after='TUCD59')
+    
+    tbhdu.header.set('TUCD60','stat.value',after='TFORM60')
+    tbhdu.header.set('TDESC60','250 Bayes Pval residual statistic',after='TUCD60')
+
+    tbhdu.header.set('TUCD61','stat.value',after='TFORM61')
+    tbhdu.header.set('TDESC61','350 Bayes Pval residual statistic',after='TUCD61')
+
+    tbhdu.header.set('TUCD62','stat.value',after='TFORM62')
+    tbhdu.header.set('TDESC62','500 Bayes Pval residual statistic',after='TUCD62')
+    
+    
+
+
+    tbhdu.header.set('TUCD63','stat.value',after='TFORM63')
+    tbhdu.header.set('TDESC63','850 MCMC Convergence statistic',after='TUCD63')
+    
+    tbhdu.header.set('TUCD64','stat.value',after='TFORM57')
+    tbhdu.header.set('TDESC64','850 MCMC independence statistic',after='TUCD64')
+    
+    tbhdu.header.set('TUCD65','stat.value',after='TFORM65')
+    tbhdu.header.set('TDESC65','850 Bayes Pval residual statistic',after='TUCD65')
 
     
     

@@ -127,6 +127,12 @@ def MIPS_PACS_SPIRE_LABOCA(phot_priors,sed_prior_model,chains=4,iter=1000):
         'bkg_prior_sig': [prior24.bkg[1], prior100.bkg[1],
                           prior160.bkg[1],prior250.bkg[1], prior350.bkg[1], prior500.bkg[1], prior850.bkg[1]],
         'conf_prior_sig': [0.1,0.1, 0.1, 0.1, 0.1, 0.1, 0.1],
+        'f_low_lim':[prior24.prior_flux_lower, prior100.prior_flux_lower, prior160.prior_flux_lower,
+                     prior250.prior_flux_lower, prior350.prior_flux_lower, prior500.prior_flux_lower,
+                     prior850.prior_flux_lower],
+        'f_up_lim':[prior24.prior_flux_upper,prior100.prior_flux_upper,prior160.prior_flux_upper, 
+                    prior250.prior_flux_upper,prior350.prior_flux_upper,prior500.prior_flux_upper, 
+                   prior850.prior_flux_upper],
         'z_median': prior24.z_median,
         'z_sig': prior24.z_sig,
         # SPIRE

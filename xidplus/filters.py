@@ -106,7 +106,7 @@ class FilterFile:
 
 #     return (numerator/denominator)*(C_num/C_denom)
 
-def fnu_filt(sed_fnu,filt_nu,filt_trans,nu_0,sed_f0,alpha):
+def fnu_filt(sed_fnu,filt_nu,filt_trans,nu_0,alpha):
     #f_nu=Int(f_nu R_nu d_nu)/Int(R_nu (nu/nu_0)^alpha d_nu)
     numerator=np.trapz(sed_fnu*filt_trans,x=filt_nu)
     denominator=np.trapz(filt_trans*(filt_nu/nu_0)**alpha,x=filt_nu)
