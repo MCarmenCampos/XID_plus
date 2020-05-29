@@ -1,0 +1,194 @@
+FILTERS COLLECTION written by Lucia Marchetti, Mattia Vaccari (University of Padova) & Eduardo Gonzalez-Solares (IoA Cambridge)
+*** Latest update : 01 June 2011 ***
+
+The filters*.res file contains a complete collection of filter response curves, corrected for QE of the telescope when necessary. Refers to the filters*.log running index to find the filters you need in the filters*.res file.
+
+*** only for hyperz users**
+- in the directory /filters-files there are all the original filters files (as downloaded from the web, *.txt) and the transformed ones to the hyperz friendly format (*forhyperz.txt) and taking into account, where necessary (and available) the quantum efficiency for each instrument. The instruction used to re-format the filters are in /filters-files/work-filters.pro (IDL script) and /filters-files/work-filters.src (stilts script)
+
+- to use filters*.res one needs to increase the limit of maximum filters ingested by hyperz; increase the parameter "mxft" in files /src/filter_ascii.f and /src/compos_new.f (the default is mxft=300)
+*** ***
+
+Version history:
+- 100330 : first version of *.res & *.log
+- 100414 : Corrected 2MASS for QE, Added WFC, KPNO,CTIO,UKIDSS all corrected for QE 
+- 100607 : Corrected SPIRE 250, 350, 500 (in the 100414 version SPIRE 350 and 500 were stored in the *.res file in the wrong order of lambdas) and added to *.res file.
+- 100910 : - Corrected for QE WFC, KPNO,CTIO,UKIDSS and TMASS, the previus version used wrong conversion factor; 
+  	   - Updated to the last version of IRAC,MIPS and IRS filters;
+	   - Added to *.res and *.log files CFHTLS, AKARI ,SUBARU, WFI, VIMOS, UKIDSS Z, UKIDSS Y, filters (alla corrected for quantum efficiency), and PACS filters as from 'PACS(/SPIRE) Instrument Simulator as of Herschel Launch'. 
+	   - PACS filters as from 'PACS DP Pipeline as of Dec 09' are also availabel in the directory ~/hyperz/ZPHOT1.3/filters/filters-files/ with the names : 
+  	   pacs-spec-resp-70-mum.asc  pacs-spec-resp-70-mum-forhyperz.txt
+  	   pacs-spec-resp-100-mum.asc pacs-spec-resp-100-mum-forhyperz.txt
+  	   pacs-spec-resp-160-mum.asc pacs-spec-resp-160-mum-forhyperz.txt
+  	   We decide to not include these last version in the .res and *.log files to mantain homogeneity with the SPIRE version of the filters; 
+	   The difference between the two versions of the PACS filters are in any case not so significant.
+- 101116 : - Added to *.res and *.log files CFHT WIRCam
+
+- 110222 : - updated SDSS filters (replacing the "old" one) using data from http://www.sdss.org/dr7/instruments/imager/index.html
+	   - added NOAO KPNO MOSAIC-1 Bw, B, V, I
+	   - added NOAO CTIO MOSAIC-2 B, V, R, I
+	   - added ONIS J,H,K
+	   - added 90prime : SDSS-u, SDSS-z, U, B, V, R, I, Washington_M
+	   - added NEWFIRM J, H, Ks
+	   - added GALEX NUV, FUV
+
+- 110315 : - added MMT megacam u,g,r,i,z
+	   - updated CFH CFH12k B,V,R,I,Z
+	   - added Subaru MOIRCS Y,J,H,Ks,K
+	   - added AzTEC 1.1 mm (in place of older "0181 U CTIO+ CTIO atmosphere")
+	   - added JCMT SCUBA 450 micron, JCMT SCUBA 850 micron (in place of old "0179 CFH 12k High Sensitivity Response" and "0180 CFH 12k Standard Sensitivity Response")
+	   - added IRAM MAMBO (1 and 2) 1.2 mm (in place of old "0081 KPNO narrow band IR filter Lambda eff = 11.1 microns FWHM=1" and "0081 KPNO narrow band IR filter Lambda eff = 8.4 microns FWHM=1.7")
+	   - updated SOFI NTT (in place of old ntt files and "0128 F160W + NICMOS normalized")
+	   - added Palomar 200" WIRC J , K (in place of old "0194 f435w  HST  ACS/WFC","0195 f606w  HST  ACS/WFC")
+	   - adeed Calar Alto Omega200 J and Omega Prime K (in place of old "0196 f775w  HST  ACS/WFC", "0197 f850lp HST  ACS/WFC")
+	   - added APEX SABOCA 350 micron and APEX LABOCA 850 micron
+	   - added HST NICMOS 3 F110W (J), F160W (H), F222M (K)
+	   - added HST ACS/WFC F435W (B), F606W (V), F814W (I), F475W (g), F625W (r), F775W (i), F850LP (z)
+	   - modified FLAMINGOS filters (index : 0253, 0254,0255) fixing a ploblem with the J filter and removing negative transmissions
+	   - modified ESO 2.2m WFI Ic/lwp, Z+/61 and UH 2.2m QUIRC H+K (AKA HK') filters (index : 0160, 0161, 0209)
+	   - added Subaru SuprimeCam IA427, IA445, IA464, IA484, IA505, IA527, IA550, IA574, IA598, IA624, IA651, IA679, IA709, IA738, IA767, IA797, IA827, IA856, IA907, NA656, NB711, NB816, NB921 (Indices 0320 to 0342)
+	   - added ESO 2.2m WFI U/50 (in place of old "0162 Z EMMI NTT 172 *") & corrected other ESO WFI filters for optics (indices 0156 to 0162)
+	   - controlled ESO VLT ISAAC J,H,Ks,L,M (not corrected for qe of the ccd), moved B/123 to indices 0163 and "Filter UV FOCA (Ref. A. Zappelli) 75*" to 0261  
+	   - added ISPI J,K used in Cardamone et al. 2010 (in place of old "0058 IR K filter + Palomar 200 IR detectors + atmosphere 33 *" ,"0060 IR K filter + Palomar 200 IR detectors + atmosphere 33 *")
+	   - added ISPI H  (in place of old "0059 IR K filter + Palomar 200 IR detectors + atmosphere 33 *")
+
+- 110430 : - added LBT LBC blue filters ( Uspec, U, B, V, g, r) modified for CCD QE
+	   - added LBT LBC red filters ( V, R, I, r, i, z, F972N20, Y) modified for CCD QE
+
+- 110601 : !! REFER TO THIS LATEST VERSION FOR ANY NEW STUDIES !!
+  	   - corrected WFI filters (reduced number of lambdas to avoid hole in the transmission)
+	   - corrected CFHT12k Imould (reduced number of lambdas to avoid hole in the transmission)
+	   - corrected SPIRE250/350/500 filters (reduced number of lambdas to avoid hole in the transmission)
+	   - corrected MMT megacam u filter (reduced number of lambdas to avoid hole in the transmission)
+	   - reduced UKIDSS filters
+	   - addedd ISO CAM LW2, LW10, LW3 and ISO PHT C90, C160 
+           - addedd CFHT MegaCam i2 AKA y, the new version of "CFHT MegaCam i1 AKA i" at 0244
+	   - moved "0210 Spitzer IRS 16 micron (bluePUtrans)" to index 0260, "0260 Spitzer IRS 22 micron (redPUtrans)" to 0261 and deleted old filter "0261 Filter UV FOCA (Ref. A. Zappelli)" (look to previous version "110430" if you need it)
+	   - addedd VISTA VIRCAM Z, Y, J, H, ks (reduced number of lambdas to avoid hole in the transmission)
+	   - added ESO VST OMEGACAM u,g,r,i,z filters in place of old: "0169 V Hall et al. 96 (qso photometry, EH)","0170 I75 Hall et al. 96  (qso photometry, EH)", "0171 I86 Hall  et al. 96 (qso photometry, EH)", "0172 Megacam u* filter (Ref. O. Boulade)","0173 Megacam b* filter (Ref. O. Boulade)". These filters have been mean across the 50 columns of transmission.
+	   - corrected filters subaru "0340 Subaru SuprimeCam NB711" and "0341 Subaru SuprimeCam NB816", they were written in the wrong order of lambdas.
+
+NOTES : 
+The .res file is updated when necessary so it doesn't follow any order of lambdas or surveys.
+The best way to find the filter you are insterested in is to browse/search the .log file and
+determine the ID of your filter(s) of interest.
+
+NB : "*" in .log file indicates the origin of the filter shape is unknown and thus probably dates back
+to the .log file shipped with the hyperz code by Micol Bolzonella and then modified by Giulia Rodighiero
+
+The on-line and literature informations about filters can be found at:
+
+GALEX : http://galexgi.gsfc.nasa.gov/docs/galex/Documents/PostLaunchResponseCurveData.html
+
+SDSS : http://www.sdss.org/dr7/instruments/imager/index.html and Doi et al. 2010 ; http://www.astro.princeton.edu/PBOOK/camera/camera.htm
+
+WFC  : http://catserver.ing.iac.es/filter/list.php?instrument=WFC (ugriz : 204,220,214,215,195)
+
+NOAO KPNO MOSAIC-1 : http://www.noao.edu/kpno/mosaic/filters/filters.html ; http://www.noao.edu/kpno/mosaic/chips.html (Ugriz : k1001,k1017,k1018,k1019,k1020,R Harris k1004 ; BVRI ; Bw from http://www.noao.edu/noao/noaodeep/)
+
+NOAO CTIO MOSAIC-2 : Brian Siana web-page http://www.astro.caltech.edu/~bsiana/cdfs_opt/filters.html ; http://www.astro.caltech.edu/~bsiana/cdfs_opt/coverage.html ; http://www.noao.edu/kpno/mosaic/filters/filters.html ; http://www.ctio.noao.edu/pfccd/mosaic_ccds.html (Ugriz : c6001,c6017,c6018,c6019,c6020 ; BVRI)
+
+CFHT MegaCam : http://www2.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/community/CFHTLS-SG/docs/extra/filters.html ; http://www.cfht.hawaii.edu/Instruments/Filters/ ; NEW release at : http://cadcwww.dao.nrc.ca/megapipe/docs/filters.html (added "i2" filter)
+
+SUBARU : http://www.naoj.org/Observing/Instruments/SCam/sensitivity.html
+
+ESO/MPG 2.2m WFI : http://www.eso.org/sci/facilities/lasilla/instruments/wfi/inst/index.html (archive); http://www.eso.org/lasilla/instruments/wfi/inst/filters/ (ESIS [B/123, V/89, Rc/162], Ic/lwp, Z+/61, U/38, U/50 = U35 = U_35060 = ESO #877 = Broadhurst filter U350/6, old name: U/360)
+
+HST ACS/WFC :  http://www.stsci.edu/hst/acs/analysis/zeropoints ; http://acs.pha.jhu.edu/instrument/filters/general/Master_Table.html (raw)
+    	      - we take filters for the period before 4 July 2006 since the majority of the observation with ACS/WFC has been done during that period.
+	      - ACS/HRC shares the same filters wheel with HST/WFC, but has different CCD response. 
+	      	This instrument is used to cover very small areas with high resolution and we do not iclude its filters response in our compilation.
+		Some more information on HST ACS/HRC can be found at http://www.stsci.edu/hst/udf/ACSHRCtop
+
+HST NICMOS : http://nicmosis.as.arizona.edu:8000/FILTERS.html
+
+VIMOS : http://www.eso.org/sci/facilities/paranal/instruments/vimos/inst/imaging.html (filters used in ESIS I and z)
+
+MMT Megacam : https://www.cfa.harvard.edu/~bmcleod/Megacam/Filters/
+
+CFHT CFH12k : http://www.cfht.hawaii.edu/Instruments/Filters/cfh12k.html
+
+LBT LBC : http://abell.as.arizona.edu/~lbtsci/Instruments/LBC/lbc_description.html#filters.html
+
+ESO VST OMEGACAM : http://www.eso.org/sci/facilities/paranal/instruments/omegacam/tools/index.html
+
+90prime : http://uao.itl.arizona.edu/90prime/Documents/Forms/AllItems.aspx?RootFolder=%2F90prime%2FDocuments%2Ffilters%2F90Prime%5Ffilter%5Ftracings&FolderCTID=0x012000933FDA4A69D20D409DB607E5B03F1FE7&View={69AFC8C7-A1E6-40DE-A552-18EB41A99EEE}
+
+UH 2.2m QUIRC H+K (AKA HK') : http://www.ifa.hawaii.edu/instrumentation/quirc/quirc.html
+
+ESO VLT ISAAC : http://www.eso.org/observing/etc/bin/script/calib/calibdisp?INS.NAME=MAIN ; We take filters for the Infrared LW Imaging domain, but we do not apply to the filter any correction fo CCD QE or Optics.
+
+UKIRT WFCAM (UKIDSS) : Hewett et al.2006 ; Tokunaga et al.2002 ; http://www.jach.hawaii.edu/UKIRT/instruments/wfcam/user_guide/description.html
+
+2MASS : http://www.ipac.caltech.edu/2mass/releases/allsky/doc/sec6_4a.html
+
+VISTA VIRCAM z, Y, J, H, ks (private communication with David Bonfield). This filters have been modified by David Bonfield as follow:
+        by resampling and multiplying together the following:
+	- filter transmission
+	- mirror reflectivities
+	- detector qe
+	- model atmospheric transmission (i think the model is a 1 airmass,1mm water column model from MODTRAN but i have lost the reference for my spectrum.  I extrapolated shortward in wavelength for the Z-band as this is a near-ir model).
+	For the original vesion of the filter look at http://www.eso.org/sci/facilities/paranal/instruments/vircam/inst/
+
+CFHT WIRCam : http://www.cfht.hawaii.edu/Instruments/Imaging/WIRCam/WIRCamThroughput.html ; http://www.cfht.hawaii.edu/Instruments/Imaging/WIRCam/
+
+AKARI : http://www.ir.isas.jaxa.jp/AKARI/Observation/RSRF/FIS_FAD/index.html. (The response of the filters are renormalized by the maximum value of each filter)
+
+FLAMINGOS : http://flamingos.astro.ufl.edu/ ; http://flamingos.astro.ufl.edu/Filter_Info/index.html
+	  The dewar files are the Broadband Filters for FLAMINGOS Purchased by UF from BARR Associates. These replaced loaner filters from NOAO & Gemini
+    	  
+	  FLAMINGOS.BARR.H.MAN109A.WarmFilter.txt	       : Dewar, last version from 2003 to present
+	  FLAMINGOS.H-band.2000toJuly2003.NOAO.OCLI-Filter.txt : Standard Broad Band Filters for FLAMINGOS
+						       	       	 Filters Loaned to UF by NOAO and Gemini (2000 to 2003)
+
+	  FLAMINGOS.BARR.J.MAN240B.WarmFilter.txt	       : Dewar, last version from 2003 to present
+	  FLAMINGOS.J-band.2000toJuly2003.NOAO-OCLI-Filter.txt : Standard Broad Band Filters for FLAMINGOS
+						       	         Filters Loaned to UF by NOAO and Gemini (2000 to 2003)    
+
+          FLAMINGOS.BARR.Ks.MAN306A.WarmFilter.txt	       : Dewar, last version from 2003 to present
+	  FLAMINGOS.Ks-band.2000toJuly2003.Gemini.NIRI.OCLI-Filter.txt : Standard Broad Band Filters for FLAMINGOS
+						       	               	 Filters Loaned to UF by NOAO and Gemini (2000 to 2003)
+	  
+	  FLAMINGOS.K-band.2000toPresentDay.NOAO-OCLI-Filter.txt : Standard Broad Band Filters for FLAMINGOS
+						       	           Filters Loaned to UF by NOAO and Gemini (from 2000 to present)
+
+TIFKAM/ONIS : J, H, K  (http://www.noao.edu/kpno/manuals/onis/ ; zbootes : http://www.noao.edu/noao/noaodeep/)
+
+NEWFIRM : http://www.noao.edu/ets/newfirm/ (JX data pack, HX data pack, KX data pack)
+
+Subaru MOIRCS : http://www.naoj.org/Observing/Instruments/MOIRCS/imag_sensitivity.html
+
+ESO NTT SOFI : http://www.eso.org/sci/facilities/lasilla/instruments/sofi/inst/Imaging.html
+
+Palomar 200" WIRC : Kevin Bundy (private communication, through Guillermo Barro)
+
+Calar Alto Omega 2000 J and Omega Prime K : Guillermo Barro (private communication)
+
+NOAO CTIO 4m ISPI: J186, K'188  (Cardamone et al. 2010, http://physics.rutgers.edu/~gawiser/MUSYC/data.html ; http://www.astro.yale.edu/MUSYC/ecdfs/nir_wide, tokunaga&vacca 2005 & 2007 for detail on K')
+
+NOAO CTIO 4m ISPI : H187 ( http://www.ctio.noao.edu/instruments/ir_instruments/ispi/)
+
+IRS : http://ssc.spitzer.caltech.edu/irs/calibrationfiles/ ; http://ssc.spitzer.caltech.edu/irs/calibrationfiles/peakupfiltertransmissioncurves/
+
+IRAC: http://ssc.spitzer.caltech.edu/irac/calibrationfiles/spectralresponse/ ; in the filters-files derectory there are both the old version and the new version of the filters respectiverly : 
+      old : irac_tr1_2004-08-09.dat, irac_tr2_2004-08-09.dat, irac_tr3_2004-08-09.dat, irac_tr4_2004-08-09.dat
+      new : irac-080924ch1trans_full.txt, irac-080924ch2trans_full.txt, irac-080924ch3trans_full.txt, irac-080924ch4trans_full.txt
+      Since filters-100910.res we refer to the new version of these filters.
+
+MIPS: http://ssc.spitzer.caltech.edu/mips/calibrationfiles/spectralresponse/
+
+ISO CAM : http://ulisse.pd.astro.it/Astro/ADPS/
+
+ISO PHT : sent by Csaba Kiss and Ulrich Klaas  
+
+SPIRE : Pilbratt et al. 2010 (arXiv:1005.5331) ; Griffin et al. 2010 (arXiv:1005.5123) 
+
+PACS : Pilbratt et al. 2010 (arXiv:1005.5331) ; Poglitsch at al. 2010 (arXiv:1005.1487)
+
+AzTEC 1.1 mm : http://www.astro.umass.edu/aztec/Instrument/instru.html
+
+JCMT SCUBA : http://www.jach.hawaii.edu/JCMT/continuum/background/background.html
+
+IRAM MAMBO : http://www.astro.uni-bonn.de/~bertoldi/projects/mambo/ ; http://www.mpifr-bonn.mpg.de/div/bolometer/spectra/spectralresponse.html
+
+APEX SABOCA 350 micron and APEX LABOCA 850 micron : Axel Weiss (private communication, through Isaac Roseboom)
