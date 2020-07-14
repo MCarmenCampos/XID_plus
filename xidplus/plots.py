@@ -139,3 +139,7 @@ def plot_Bayes_pval_map(priors, posterior):
         figs[i].add_colorbar()
         figs[i].colorbar.set_location('top')
     return figs, fig
+
+
+
+

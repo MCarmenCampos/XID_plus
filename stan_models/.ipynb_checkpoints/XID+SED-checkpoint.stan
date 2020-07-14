@@ -87,7 +87,10 @@ data
   int nband;
   real SEDs[nTemp,nband,nz];
   //-----------------------
-
+  //----other photometry----
+  vector[nband-3] src_f_obs[nsrc];//in mJy
+  vector[nband-3] src_f_sig[nsrc];//in mJy
+  real src_f_cut[nband-3]; //src_f cut in other bands
 }
 
 parameters {
@@ -98,12 +101,7 @@ parameters {
   real<lower=0.0> sigma_conf[3];
 
 }
-//transformed parameters{
-//  real<lower=0.0> sigma_conf[3];
-//  for (i in 1:5){
-//    sigma_conf[i]=0.0;
-//}
-//}
+
 
 model{
   vector[npix_psw] db_hat_psw;//model of map
@@ -119,28 +117,25 @@ model{
   //Prior on background
   bkg[i] ~normal(bkg_prior[i],bkg_prior_sig[i]);
 
-//  Prior on conf
-//  sigma_conf[i] ~normal(0,conf_prior_sig[i]);
+ //Prior on conf
+  sigma_conf[i] ~normal(0,5);
   }
 
 
 
   for (i in 1:nsrc){
     vector[nTemp] ps;//log prob
-    z[i]~normal(z_median[i],z_sig[i]);
-
     for (t in 1:nTemp){
         vector[nband] f_tmp;
 	for (b in 1:nband){
         f_tmp[b]=pow(10.0,Nbb[i])*interpolateLinear(SEDs[t,b], z[i]*100.0);
 	}
 	//print(f_tmp)
-        ps[t]<-normal_lpdf(src_f[i]|f_tmp,0.3*f_tmp);  
+        ps[t]<-normal_lpdf(src_f[i]|f_tmp,f_tmp/5.0);   
     }
     target+=log_sum_exp(ps);
-
+    //z~normal(z_mean,z_sig);
   }
-
 
    
   // Create model maps (i.e. db_hat = A*f) using sparse multiplication
@@ -173,7 +168,12 @@ model{
   db_pmw ~ normal(db_hat_pmw,sigma_tot_pmw);
   db_plw ~ normal(db_hat_plw,sigma_tot_plw);
 
+  // likelihood of other src_fes
+  for (s in 1:nsrc){
 
+  src_f_obs[s,1] ~normal(src_f[s,4],src_f_sig[s,1]) T[src_f_cut[1],];
+
+}
 
 
 }
@@ -186,9 +186,8 @@ for (i in 1:nsrc){
         vector[nband] f_tmp;
 	for (b in 1:nband) {
         f_tmp[b]=pow(10.0,Nbb[i])*interpolateLinear(SEDs[t,b], z[i]*100.0);
-        //f_tmp[b]=pow(10.0,Nbb[i])*interpolateLinear(SEDs[t,b], z_median[i]*100.0);
 	}
-        p_raw[t] = (1.0/nTemp)*exp(normal_lpdf(src_f[i]|f_tmp,0.3*f_tmp));
+        p_raw[t] = (1.0/nTemp)*exp(normal_lpdf(src_f[i]|f_tmp,f_tmp/5.0));
      }
      for (t in 1:nTemp){
      p[i,t]=p_raw[t]/sum(p_raw);

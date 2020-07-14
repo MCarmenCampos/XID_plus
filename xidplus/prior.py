@@ -1,6 +1,6 @@
 import numpy as np
 from astropy import wcs
-
+from herschelhelp_internal.utils import inMoc
 from xidplus import moc_routines
 
 
@@ -10,7 +10,7 @@ class prior(object):
         """
         wcs_temp = wcs.WCS(self.imhdu)
         ra, dec = wcs_temp.wcs_pix2world(self.sx_pix, self.sy_pix, 0)
-        ind_map = np.array(moc_routines.check_in_moc(ra, dec, self.moc))
+        ind_map = np.array(inMoc(ra, dec, self.moc))
         # now cut down and flatten maps (default is to use all pixels, running segment will change the values below to pixels within segment)
         self.sx_pix = self.sx_pix[ind_map]
         self.sy_pix = self.sy_pix[ind_map]
@@ -21,7 +21,7 @@ class prior(object):
     def cut_down_cat(self):
         """Cuts down prior class variables associated with the catalogue data to the MOC assigned to the prior class: self.moc
         """
-        sgood = np.array(moc_routines.check_in_moc(self.sra, self.sdec, self.moc))
+        sgood = np.array(inMoc(self.sra, self.sdec, self.moc))
 
         self.sx = self.sx[sgood]
         self.sy = self.sy[sgood]
@@ -297,16 +297,16 @@ class prior(object):
         self.amat_col = amat_col
 
         
-class prior_submm(object):
-    def __init__(self, flux, sigma_flux):
-
-        # ---for any bad pixels set map pixel to zero and uncertianty to 1----
-        """Initiate prior class
-
-        :param flux: data on source fluxes
-        :param sigma_flux: data on source sigma_flux 
-        """
         
-        self.flux = flux
-        self.sigma_flux = sigma_flux
+    def set_gaussprior_flux(self, f_mu, f_sigma):
+        """Add gaussian parameters to define a prior on the flux
 
+        :param f_mu: n array, where n is the number of sources, mean flux prior
+        :param f_sigma: n array, sigma flux prior
+        """
+
+        self.prior_mean_flux = f_mu
+        self.prior_sigma_flux = f_sigma
+        
+        
+        
