@@ -109,3 +109,37 @@ def replicated_maps(priors,posterior,nrep=1000):
                                        +np.random.normal(scale=np.sqrt(priors[b].snim**2
                                                                        +posterior.samples['sigma_conf'][i]**2))
     return mod_map_array
+
+def replicated_maps_gauss_prior(priors,posterior,nrep=1000,gaussprior=False):
+    """Create posterior replicated maps
+
+    :param priors: list of xidplus.prior class - only priors to replicate_map
+    :param posterior: xidplus.posterior class
+    :param nrep: number of replicated maps
+    :return: 
+    """
+    
+    if gaussprior == 'Herschel':
+        gp = 1
+    if gaussprior == 'SPIRE':
+        gp = 3
+    else:
+        gp = 0
+        
+    mod_map_array=list(map(lambda prior:np.empty((prior.snpix,nrep)), priors))
+    for i in range(0,nrep):          
+        try:
+            for b in range(0,len(priors)):
+                mod_map_array[b][:,i]= ymod_map(priors[b],posterior.samples['src_f'][i,b+gp,:]).reshape(-1)\
+                                       +posterior.samples['bkg'][i,b]\
+                                       +np.random.normal(scale=np.sqrt(priors[b].snim**2
+                                                                       +posterior.samples['sigma_conf'][i,b]**2))
+                
+        except IndexError:
+            for b in range(0,len(priors)):
+                mod_map_array[b][:,i]= ymod_map(priors[b],posterior.samples['src_f'][i,b+gp,:]).reshape(-1)\
+                                       +posterior.samples['bkg'][i]\
+                                       +np.random.normal(scale=np.sqrt(priors[b].snim**2
+                                                                       +posterior.samples['sigma_conf'][i]**2))
+    
+    return mod_map_array
