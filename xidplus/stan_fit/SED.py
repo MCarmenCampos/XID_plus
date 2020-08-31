@@ -211,7 +211,7 @@ def MIPS_PACS_SPIRE_LABOCA(phot_priors,sed_prior_model,chains=4,iter=1000, contr
     return fit
 
 
-def SPIRE(phot_priors,sed_prior_model,chains=4,iter=1000):
+def SPIRE_SED(phot_priors,sed_prior_model,chains=4,iter=1000):
 
     """
     Fit the three SPIRE bands
@@ -264,7 +264,7 @@ def SPIRE(phot_priors,sed_prior_model,chains=4,iter=1000):
     }
 
     #see if model has already been compiled. If not, compile and save it
-    model_file='/XID+SPIRE_SED'
+    model_file='/XID+SPIRE_SED_flux-limits'
     from xidplus.stan_fit import get_stancode
     sm = get_stancode(model_file)
 
